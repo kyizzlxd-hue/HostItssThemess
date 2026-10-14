@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
 # Color
 BLUE='\033[0;34m'       
 RED='\033[0;31m'
@@ -92,15 +94,15 @@ install_theme() {
     read -r SELECT_THEME
     case "$SELECT_THEME" in
       1)
-        THEME_URL=$(echo -e "https://github.com/Bangsano/Autoinstaller-Theme-Pterodactyl/raw/main/stellar.zip")  
+        THEME_FILE="$SCRIPT_DIR/stellar.zip"  
         break
         ;;
       2)
-        THEME_URL=$(echo -e "https://github.com/Bangsano/Autoinstaller-Theme-Pterodactyl/raw/main/billing.zip")
+        THEME_FILE="$SCRIPT_DIR/billing.zip"
         break
         ;;
       3)
-        THEME_URL=$(echo -e "https://github.com/Bangsano/Autoinstaller-Theme-Pterodactyl/raw/main/enigma.zip")
+        THEME_FILE="$SCRIPT_DIR/enigma.zip"
         break
         ;; 
       x)
@@ -115,8 +117,11 @@ install_theme() {
 if [ -e /root/pterodactyl ]; then
     sudo rm -rf /root/pterodactyl
   fi
-  wget -q "$THEME_URL"
-  sudo unzip -o "$(basename "$THEME_URL")"
+  if [ ! -f "$THEME_FILE" ]; then
+    echo -e "${RED}File tema tidak ditemukan: $THEME_FILE${NC}"
+    return 1
+  fi
+  sudo unzip -o "$THEME_FILE" -d /root
   
 if [ "$SELECT_THEME" -eq 1 ]; then
   echo -e "                                                       "
@@ -133,7 +138,6 @@ if [ "$SELECT_THEME" -eq 1 ]; then
   php artisan migrate
   yarn build:production
   php artisan view:clear
-  sudo rm /root/stellar.zip
   sudo rm -rf /root/pterodactyl
 
   echo -e "                                                       "
@@ -247,11 +251,12 @@ echo -e "${BLUE}[+] =============================================== [+]${NC}"
 echo -e "                                                                   "
 
 # Unduh file tema
-wget -O /root/stellar.zip https://github.com/Bangsano/Autoinstaller-Theme-Pterodactyl/raw/main/stellar.zip
+if [ ! -f "$SCRIPT_DIR/stellar.zip" ]; then echo "File stellar.zip tidak ditemukan"; return 1; fi
 
 
 # Ekstrak file tema
-unzip /root/stellar.zip -d /root/pterodactyl
+rm -rf /root/pterodactyl
+unzip -o "$SCRIPT_DIR/stellar.zip" -d /root
 
 # Salin tema ke direktori Pterodactyl
 sudo cp -rfT /root/pterodactyl /var/www/pterodactyl
@@ -269,7 +274,7 @@ yarn build:production
 php artisan view:clear
 
 # Hapus file dan direktori sementara
-sudo rm /root/stellar.zip
+
 sudo rm -rf /root/pterodactyl
 
 echo -e "                                                       "
@@ -607,7 +612,7 @@ installThemeQuestion(){
 installTheme_nightcore(){
     echo -e "                                                       "
     echo -e "${GREEN}[+] =============================================== [+]${RESET}"
-    echo -e "${GREEN}[+]          INSTALLASI ITSHOST THEME           [+]${RESET}"
+    echo -e "${GREEN}[+]          INSTALLASI NIGHTCORE THEME           [+]${RESET}"
     echo -e "${GREEN}[+] =============================================== [+]${RESET}"
     echo -e "                                                       "
 
@@ -620,21 +625,15 @@ installTheme_nightcore(){
     cd /var/www/pterodactyl > /dev/null 2>&1
     echo -e "${GREEN}Removing old theme if exist${RESET}"
     rm -r Pterodactyl_Nightcore_Theme > /dev/null 2>&1
-    echo -e "${GREEN}Loading ItsHost theme files${RESET}"
-    SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-    THEME_SOURCE="$SCRIPT_DIR"
-    if [ ! -f "$THEME_SOURCE/Pterodactyl_Nightcore_Theme.css" ] || [ ! -f "$THEME_SOURCE/index.tsx" ]; then
-        echo -e "${YELLOW}Local ItsHost files not found; downloading the upstream theme files.${RESET}"
-        git clone https://github.com/Bangsano/Autoinstaller-Theme-Pterodactyl.git /tmp/ItsHost-theme-source > /dev/null 2>&1
-        THEME_SOURCE="/tmp/ItsHost-theme-source"
-    fi
+    echo -e "${GREEN}Download the Theme${RESET}"
+    git clone https://github.com/Bangsano/Autoinstaller-Theme-Pterodactyl.git > /dev/null 2>&1
+    cd Autoinstaller-Theme-Pterodactyl > /dev/null 2>&1
     echo -e "${GREEN}Removing old theme resources if exist${RESET}"
-    rm -f /var/www/pterodactyl/resources/scripts/Pterodactyl_Nightcore_Theme.css
-    rm -f /var/www/pterodactyl/resources/scripts/index.tsx
-    echo -e "${GREEN}Installing ItsHost theme files${RESET}"
-    cp "$THEME_SOURCE/index.tsx" /var/www/pterodactyl/resources/scripts/index.tsx
-    cp "$THEME_SOURCE/Pterodactyl_Nightcore_Theme.css" /var/www/pterodactyl/resources/scripts/Pterodactyl_Nightcore_Theme.css
-    rm -rf /tmp/ItsHost-theme-source
+    rm /var/www/pterodactyl/resources/scripts/Pterodactyl_Nightcore_Theme.css > /dev/null 2>&1
+    rm /var/www/pterodactyl/resources/scripts/index.tsx > /dev/null 2>&1
+    echo -e "${GREEN}Moving the new theme files to directory${RESET}"
+    mv index.tsx /var/www/pterodactyl/resources/scripts/index.tsx > /dev/null 2>&1
+    mv Pterodactyl_Nightcore_Theme.css /var/www/pterodactyl/resources/scripts/Pterodactyl_Nightcore_Theme.css > /dev/null 2>&1
     cd /var/www/pterodactyl > /dev/null 2>&1
     
     curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash - > /dev/null 2>&1
@@ -667,7 +666,7 @@ installTheme_nightcore(){
 
     echo -e "                                                       "
     echo -e "${GREEN}[+] =============================================== [+]${RESET}"
-    echo -e "${GREEN}[+]      ITSHOST THEME BERHASIL DIINSTALL        [+]${RESET}"
+    echo -e "${GREEN}[+]      NIGHTCORE THEME BERHASIL DIINSTALL        [+]${RESET}"
     echo -e "${GREEN}[+] =============================================== [+]${RESET}"
     echo -e "                                                       "
 }
@@ -707,7 +706,7 @@ while true; do
   echo "9. Install Depend"
   echo "10. Install Tema Nebula (wajib install depend terlebih dahulu)"
   echo "11. Install Tema Elysium"
-  echo "12. Install Tema ItsHost"
+  echo "12. Install Tema Nightcore"
   echo "x. Exit"
   echo -e "Masukkan pilihan 1/2/3/.../x:"
   read -r MENU_CHOICE
